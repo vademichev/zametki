@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"> <!--кодировка для кириллицы-->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+             <!--масштабирование CSS пикселей в реальные-->
+
+             <!-- Для PWA добавляем ряд параметров *************************************-->
+              <!-- ЛОКАЛЬНО ОНИ РАБОТАТЬ НЕ БУДУТ  НУЖНО ВЫГРУЗИТЬ НА HTTPS СЕРВЕР-->
+             <link rel="manifest" href="manifest.json">  <!-- Подключаем manifest -->
+              <link rel="icon" type="image/png" href="logo192.png"> <!-- Иконка для Android и общих целей -->
+              <!-- для iOS-->
+               <!-- Иконка для iOS (обязательно!) -->
+               <link rel="apple-touch-icon" href="logo192.jpg">
+               <!-- Метатеги для полноэкранного режима на iOS -->
+               <meta name="apple-mobile-web-app-capable" content="yes">
+               <meta name="apple-mobile-web-app-status-bar-style" content="default">
+               <meta name="apple-mobile-web-app-title" content="Calculator">
+               <!-- Тема для Safari (на новых iOS) -->
+               <meta name="theme-color" content="#3367D6">
+             <!--************************************************************************-->
+        <style>
+            *{ /*СSS ресет*/
+                box-sizing: border-box; /*размер блока считать по рамке*/
+                margin: 0px; /*все отступы по умолчанию 0*/
+                padding: 0px;
+            }
+            .container{
+                width: 100vw; /*блок занимает весь экран*/
+                height: 100vh; /*vw - view width - ширина экрана vh - view height высота экрана*/
+
+                display: flex; /*включили flex - модель для дочерних элементов*/
+                flex-direction: column; /*расставлять дочерние блоки по вертикали*/
+                align-items: center;
+                background-color: rgb(89, 2, 2); /*цвет фона*/
+            }
+            .form{
+                width: 90%; /*% берутся от родительского блока*/
+                height: fit-content; /*высота чтобы влезло содержимое*/
+                display: flex;
+                flex-direction: row;
+                background-color: darkgray; /*цвет фона*/
+                justify-content: space-around;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+            .text{
+                width:70%;
+                font-size: 30px;
+                height: 100px;
+            }
+            .button
+            {
+                width:25%;
+                font-size: 30px;
+                min-width: 187px;
+            }
+            .wrap{
+                display: flex;
+                width: 90%; /*% берутся от родительского блока*/
+                height: fit-content;
+                flex-grow: 1;
+                background-color: rgb(7, 27, 182); /*цвет фона*/
+                flex-direction: column; /*расставлять дочерние блоки по вертикали*/
+                margin-bottom: 10px;
+                align-items: center;
+                overflow-y: scroll; /*если не влезает по y то вывести полосу прокрутки*/
+            }
+            .row{
+                width: 90%;
+                height: fit-content;
+                background-color: rgb(241, 164, 10);
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                margin: 5px;
+            }
+            .date{
+                width: 30%;
+                color: white;
+                font-size: 30px;
+                background-color: rgb(12, 114, 26);
+            }
+            .zam{
+                width: 60%;
+                color: white;
+                font-size: 30px;
+                background-color: rgb(12, 114, 26);
+                height: fit-content;
+                overflow: hidden; /*если не влезло то просто обрезать то что не влезло*/
+            }
+
+        </style>
+        <script>
+            function butZapClick() /*Обработчик нажатия кнопки*/
+            {
+                //alert("Нажали кнопку :)");
+                let txtArea = document.querySelector(".text"); // Получаем в переменную нашу textarea c классом text
+                                                     //. это искать по классу
+                let message = txtArea.value; // Достали из элемента его текстовое содержимое.
+                // Определим текущую дату
+                let now = new Date(); //получаем текущую дату как объект JS Date
+                //!! месяца в JS нумеруются с 0 - нужно добавлять 1
+                let dateStr = now.getDate() +"/" + (now.getMonth()+1) + "/"+ now.getFullYear();
+                //alert("Получена дата="+dateStr); // Проверка что все правильно
+
+                //Теперь положим все в localstorage
+
+                let record = { // Объект JS - словарь - ключ : значение.
+                               date: dateStr,
+                               message: message
+                             }
+                let items;
+                let storageText;
+                try{
+                    // блок try - пытаемся получить запись и 
+                    // преобразовать текст в JSON
+                    storageText = localStorage.getItem('ourRecords'); // Получили запись из хранилища - там только текст
+                    items = JSON.parse(storageText); // Преобразуем текст в переменную
+                }catch(err){
+                    // если ошибка - то создаем пустой массив
+                    items=[];
+                }
+
+                items.push(record);// добавили нашу запись в конец массива
+                storageText = JSON.stringify(items); // Преобразовали массив в текст
+
+                localStorage.setItem('ourRecords', storageText); // Записали в хранилище                             
+                //alert("В localStorage сейчас по ключу ourRecords "+localStorage.getItem('ourRecords')); //+ со строками - это склейка
+                drawItems(); // Вызвали перерисовку блока wrap
+            }
+            function drawItems() // Функция для отрисовки текущих сообщений
+            {
+                HTMLStr=""; // Содержимое блока
+                try{
+                    // блок try - пытаемся получить запись и 
+                    // преобразовать текст в JSON
+                    storageText = localStorage.getItem('ourRecords'); // Получили запись из хранилища - там только текст
+                    items = JSON.parse(storageText); // Преобразуем текст в переменную
+                }catch(err){
+                    // если ошибка - то создаем пустой массив
+                    items=[];
+                }
+                for(record of items) // тоже что foreach в C# или for в python -
+                { // `` - это строка с подстановкой ${} - подставить значение переменной
+                    HTMLStr+=`<div class="row">
+                                <div class="date">${record.date}</div>
+                                <div class="zam">${record.message}</div>
+                              </div>`;
+                }
+                //alert(HTMLStr); // Смотрим что получилось
+                let wrap = document.querySelector(".wrap");
+                wrap.innerHTML = HTMLStr; // Записать в содержимое блока нашу строку
+
+            } // function(){...} - безымянная функция, используется когда из другого места нам не надо ее вызывать
+            window.onload=function(){    // window.onload - событие окна, которое случается когда все элементы окна браузера
+                                        // созданы и отрисованы
+                drawItems(); // Вызываем обновление записей
+            } 
+
+        </script>
+    
+    <!-- Для PWA добавляем ряд параметров *************************************-->    
+    <!-- Регистрация Service Worker -->
+   <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() { // Добавить обработчик событий на window.onload
+        navigator.serviceWorker.register('serviceworker.js') // Запустить регистрацию сервисворкера
+          .then(function(reg) { // Когда пройдет - то вызвать эту функцию
+            console.log('Service Worker зарегистрирован:', reg.scope);
+          })
+          .catch(function(err) { // Если нет - то вывести в консоль ругательство
+            console.error('Ошибка регистрации SW:', err);
+          });
+      });
+    }
+  </script>
+  <!--***********************************************************************-->
+    </head>
+    <body>
+        <div class="container">
+            <div class="form">
+                <textarea class="text"></textarea>
+                <button type="button" class="button" onclick="butZapClick()">Запомнить</button>
+            </div>                                   <!--Обработчик событий-->
+            <div class="wrap">
+                <div class="row">
+                    <div class="date">22.01.26</div>
+                    <div class="zam">Привет !</div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
