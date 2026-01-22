@@ -118,11 +118,12 @@
                     // преобразовать текст в JSON
                     storageText = localStorage.getItem('ourRecords'); // Получили запись из хранилища - там только текст
                     items = JSON.parse(storageText); // Преобразуем текст в переменную
+                    if (!items) throw "no data"; // Если items пусто то кидаем ошибку чтобы сработал catch
                 }catch(err){
                     // если ошибка - то создаем пустой массив
                     items=[];
                 }
-
+                
                 items.push(record);// добавили нашу запись в конец массива
                 storageText = JSON.stringify(items); // Преобразовали массив в текст
 
